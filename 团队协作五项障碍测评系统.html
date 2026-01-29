@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>团队协作五项障碍测评系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-blue: #1a237e;
+            --secondary-blue: #283593;
+            --accent-blue: #3949ab;
+            --light-blue: #5c6bc0;
+            --highlight-blue: #7986cb;
+            --text-light: #e8eaf6;
+            --text-white: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f1b3d 0%, #1a237e 50%, #283593 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #4fc3f7, #2979ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(41, 121, 255, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1100px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--text-white);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-title i {
+            color: #4fc3f7;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 900px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .stat-item {
+            background: rgba(0, 30, 96, 0.4);
+            border-radius: 15px;
+            padding: 20px 15px;
+            text-align: center;
+            border: 1px solid rgba(79, 195, 247, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            border-color: rgba(79, 195, 247, 0.5);
+            background: rgba(0, 30, 96, 0.6);
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #4fc3f7;
+            margin: 10px 0 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #00bcd4, #2979ff);
+            border-radius: 5px;
+            transition: width 1.5s ease;
+        }
+        
+        .participant-count {
+            font-size: 1.2rem;
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 30, 96, 0.4);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(79, 195, 247, 0.2);
+        }
+        
+        .count-value {
+            font-size: 2rem;
+            color: #4fc3f7;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        .high-low-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .high-low-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .high-item, .low-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid;
+        }
+        
+        .high-item {
+            border-left-color: #4caf50;
+        }
+        
+        .low-item {
+            border-left-color: #f44336;
+        }
+        
+        .item-score {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .high-item .item-score {
+            color: #4caf50;
+        }
+        
+        .low-item .item-score {
+            color: #f44336;
+        }
+        
+        .assessment-form {
+            margin-top: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: var(--text-white);
+            font-size: 1rem;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #4fc3f7;
+            box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.2);
+        }
+        
+        .rating-scale {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        
+        .rating-option {
+            text-align: center;
+            flex: 1;
+            padding: 8px 5px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        
+        .rating-option:hover {
+            background: rgba(79, 195, 247, 0.2);
+        }
+        
+        .rating-option.selected {
+            background: rgba(79, 195, 247, 0.3);
+            border-color: #4fc3f7;
+            transform: translateY(-2px);
+        }
+        
+        .rating-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #4fc3f7;
+        }
+        
+        .rating-label {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+        
+        .question-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--accent-blue);
+        }
+        
+        .question-text {
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #2979ff, #00bcd4);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(41, 121, 255, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-full {
+            width: 100%;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .report-content {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.7;
+        }
+        
+        .report-section {
+            margin-bottom: 25px;
+        }
+        
+        .report-section h4 {
+            color: #4fc3f7;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(79, 195, 247, 0.3);
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+        
+        .pill {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .pill-high {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+        
+        .pill-low {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.7;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #4fc3f7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-users"></i> 团队协作五项障碍测评系统</h1>
+            <p class="subtitle">基于帕特里克·兰西奥尼的团队协作模型，评估团队在信任、冲突、承诺、责任和结果五个维度的表现，实时生成团队分析报告</p>
+        </header>
+        
+        <div class="participant-count">
+            当前已有 <span class="count-value" id="participantCount">0</span> 人参与测评
+        </div>
+        
+        <div class="dashboard">
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-chart-bar"></i> 团队五项障碍得分</h2>
+                <div class="stats-grid" id="scoresContainer">
+                    <!-- 五项障碍得分将通过JS动态生成 -->
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="scoreChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-trophy"></i> 最高与最低得分项</h2>
+                <div class="high-low-container">
+                    <div>
+                        <h3 style="color: #4caf50; margin-bottom: 15px;"><i class="fas fa-arrow-up"></i> 最高5个得分项</h3>
+                        <div id="highScoresContainer">
+                            <!-- 最高得分项将通过JS动态生成 -->
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="color: #f44336; margin-bottom: 15px;"><i class="fas fa-arrow-down"></i> 最低5个得分项</h3>
+                        <div id="lowScoresContainer">
+                            <!-- 最低得分项将通过JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <h3 style="margin-bottom: 15px;"><i class="fas fa-calculator"></i> 平均得分</h3>
+                    <div class="stat-item">
+                        <div class="stat-value" id="averageScore">0.0</div>
+                        <div class="stat-label">团队总体平均分</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="averageProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-clipboard-check"></i> 个人测评问卷</h2>
+            <p style="margin-bottom: 20px; opacity: 0.9;">请根据您所在团队的实际情况，对以下陈述进行评分（1-5分，1表示完全不同意，5表示完全同意）</p>
+            
+            <div class="assessment-form">
+                <div class="form-group">
+                    <label for="participantName">您的姓名（可选）</label>
+                    <input type="text" id="participantName" class="form-control" placeholder="匿名参与者">
+                </div>
+                
+                <div id="questionsContainer">
+                    <!-- 问题将通过JS动态生成 -->
+                </div>
+                
+                <div class="button-group">
+                    <button id="submitBtn" class="btn btn-primary btn-full">
+                        <i class="fas fa-paper-plane"></i> 提交测评
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-file-alt"></i> 团队分析报告</h2>
+            <p style="margin-bottom: 15px; opacity: 0.9;">基于当前所有参与者的测评数据生成的详细分析报告</p>
+            
+            <div class="button-group">
+                <button id="generateReportBtn" class="btn btn-primary">
+                    <i class="fas fa-sync-alt"></i> 生成/更新报告
+                </button>
+                <button id="downloadReportBtn" class="btn btn-secondary">
+                    <i class="fas fa-download"></i> 下载报告
+                </button>
+                <button id="clearDataBtn" class="btn btn-secondary">
+                    <i class="fas fa-trash-alt"></i> 清空数据
+                </button>
+            </div>
+            
+            <div class="report-content" id="reportContent">
+                <div class="empty-state">
+                    <i class="fas fa-file-alt"></i>
+                    <h3>暂无分析报告</h3>
+                    <p>点击"生成报告"按钮，根据当前测评数据生成详细分析报告</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>团队协作五项障碍测评系统 &copy; 2023 | 基于帕特里克·兰西奥尼的《团队协作的五种障碍》模型</p>
+            <p style="margin-top: 5px; font-size: 0.8rem;">提示：所有数据仅存储在您的浏览器本地，不会上传到服务器</p>
+        </footer>
+    </div>
+
+    <script>
+        // 团队协作五项障碍模型
+        const fiveDysfunctions = [
+            { id: 'trust', name: '信任', color: '#2979ff', description: '团队成员之间相互信任，敢于暴露弱点和错误' },
+            { id: 'conflict', name: '冲突', color: '#00bcd4', description: '团队能够进行建设性的冲突，聚焦于问题而非人身攻击' },
+            { id: 'commitment', name: '承诺', color: '#4caf50', description: '团队成员对决策和行动计划做出真正的承诺' },
+            { id: 'accountability', name: '责任', color: '#ff9800', description: '团队成员互相督促，对行为和结果负责' },
+            { id: 'results', name: '结果', color: '#9c27b0', description: '团队成员关注集体成果而非个人利益' }
+        ];
+
+        // 测评问题库 - 每个障碍4个问题，共20个问题
+        const assessmentQuestions = [
+            // 信任相关
+            { id: 1, category: 'trust', text: '团队成员敢于承认自己的错误和不足', reverse: false },
+            { id: 2, category: 'trust', text: '团队成员之间愿意寻求帮助，而不担心被视为无能', reverse: false },
+            { id: 3, category: 'trust', text: '团队成员愿意相互提供建设性反馈', reverse: false },
+            { id: 4, category: 'trust', text: '团队成员之间能够坦诚交流，不需要刻意保持谨慎', reverse: false },
+            
+            // 冲突相关
+            { id: 5, category: 'conflict', text: '团队能够就重要问题展开激烈但富有建设性的辩论', reverse: false },
+            { id: 6, category: 'conflict', text: '团队成员在会议中能够充分表达不同意见', reverse: false },
+            { id: 7, category: 'conflict', text: '团队冲突通常围绕问题本身而非人际关系', reverse: false },
+            { id: 8, category: 'conflict', text: '不同意见能够得到充分讨论后才做出决定', reverse: false },
+            
+            // 承诺相关
+            { id: 9, category: 'commitment', text: '团队会议结束后，每个人都清楚下一步该做什么', reverse: false },
+            { id: 10, category: 'commitment', text: '团队成员对团队决策有清晰的共识，即使起初有不同意见', reverse: false },
+            { id: 11, category: 'commitment', text: '团队决策后，所有成员都能积极支持并执行', reverse: false },
+            { id: 12, category: 'commitment', text: '团队能够及时做出明确决策，避免拖延', reverse: false },
+            
+            // 责任相关
+            { id: 13, category: 'accountability', text: '团队成员会互相提醒未完成的工作或低标准表现', reverse: false },
+            { id: 14, category: 'accountability', text: '团队成员感到有责任实现团队目标，而不仅是个人目标', reverse: false },
+            { id: 15, category: 'accountability', text: '团队成员在他人表现不佳时会直接提出关切', reverse: false },
+            { id: 16, category: 'accountability', text: '团队有明确的绩效标准，并且成员会互相督促遵守', reverse: false },
+            
+            // 结果相关
+            { id: 17, category: 'results', text: '团队成员将团队成功置于个人利益之上', reverse: false },
+            { id: 18, category: 'results', text: '团队成员经常讨论团队的整体进展和目标达成情况', reverse: false },
+            { id: 19, category: 'results', text: '团队成员为团队目标未能达成而感到不安', reverse: false },
+            { id: 20, category: 'results', text: '团队能抵制分散注意力的活动，专注于关键目标', reverse: false }
+        ];
+
+        // 初始化本地存储
+        const STORAGE_KEY = 'teamAssessmentData';
+        let participants = [];
+        let teamScores = {
+            trust: 0,
+            conflict: 0,
+            commitment: 0,
+            accountability: 0,
+            results: 0
+        };
+        
+        let questionStats = []; // 每个问题的统计信息
+        let chart = null; // Chart.js 实例
+
+        // DOM 加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            renderQuestions();
+            updateDashboard();
+            setupEventListeners();
+        });
+
+        // 从本地存储加载数据
+        function loadData() {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    participants = data.participants || [];
+                } catch (e) {
+                    console.error('加载数据失败:', e);
+                    participants = [];
+                }
+            }
+            
+            calculateTeamStats();
+        }
+
+        // 保存数据到本地存储
+        function saveData() {
+            const data = {
+                participants: participants,
+                lastUpdated: new Date().toISOString()
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // 计算团队统计信息
+        function calculateTeamStats() {
+            // 重置团队得分
+            for (const key in teamScores) {
+                teamScores[key] = 0;
+            }
+            
+            // 重置问题统计
+            questionStats = assessmentQuestions.map(q => ({
+                id: q.id,
+                text: q.text,
+                category: q.category,
+                totalScore: 0,
+                participantCount: 0,
+                averageScore: 0
+            }));
+            
+            if (participants.length === 0) {
+                return;
+            }
+            
+            // 计算每个障碍的总分
+            participants.forEach(participant => {
+                participant.scores.forEach((score, index) => {
+                    const question = assessmentQuestions[index];
+                    if (question) {
+                        // 添加到团队总分
+                        teamScores[question.category] += score;
+                        
+                        // 更新问题统计
+                        questionStats[index].totalScore += score;
+                        questionStats[index].participantCount += 1;
+                    }
+                });
+            });
+            
+            // 计算每个障碍的平均分
+            for (const key in teamScores) {
+                const categoryQuestions = assessmentQuestions.filter(q => q.category === key).length;
+                teamScores[key] = participants.length > 0 ? 
+                    (teamScores[key] / (participants.length * categoryQuestions)).toFixed(1) : 0;
+            }
+            
+            // 计算每个问题的平均分
+            questionStats.forEach(stat => {
+                stat.averageScore = stat.participantCount > 0 ? 
+                    (stat.totalScore / stat.participantCount).toFixed(1) : 0;
+            });
+        }
+
+        // 渲染测评问题
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+            
+            assessmentQuestions.forEach((question, index) => {
+                const category = fiveDysfunctions.find(d => d.id === question.category);
+                
+                const questionElement = document.createElement('div');
+                questionElement.className = 'question-item';
+                questionElement.innerHTML = `
+                    <div class="question-text">${index + 1}. ${question.text}</div>
+                    <div class="rating-scale">
+                        <div class="rating-option" data-question="${index}" data-value="1">
+                            <div class="rating-value">1</div>
+                            <div class="rating-label">完全不同意</div>
+                        </div>
+                        <div class="rating-option" data-question="${index}" data-value="2">
+                            <div class="rating-value">2</div>
+                            <div class="rating-label">不同意</div>
+                        </div>
+                        <div class="rating-option" data-question="${index}" data-value="3">
+                            <div class="rating-value">3</div>
+                            <div class="rating-label">一般</div>
+                        </div>
+                        <div class="rating-option" data-question="${index}" data-value="4">
+                            <div class="rating-value">4</div>
+                            <div class="rating-label">同意</div>
+                        </div>
+                        <div class="rating-option" data-question="${index}" data-value="5">
+                            <div class="rating-value">5</div>
+                            <div class="rating-label">完全同意</div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(questionElement);
+            });
+            
+            // 添加评分选项的点击事件
+            document.querySelectorAll('.rating-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const questionIndex = parseInt(this.getAttribute('data-question'));
+                    const value = parseInt(this.getAttribute('data-value'));
+                    
+                    // 移除同一问题的其他选中状态
+                    const parent = this.parentElement;
+                    parent.querySelectorAll('.rating-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // 设置当前选项为选中状态
+                    this.classList.add('selected');
+                });
+            });
+        }
+
+        // 更新仪表板
+        function updateDashboard() {
+            // 更新参与者数量
+            document.getElementById('participantCount').textContent = participants.length;
+            
+            // 更新五项障碍得分
+            const scoresContainer = document.getElementById('scoresContainer');
+            scoresContainer.innerHTML = '';
+            
+            fiveDysfunctions.forEach(dysfunction => {
+                const score = parseFloat(teamScores[dysfunction.id]) || 0;
+                const percentage = (score / 5) * 100;
+                
+                const scoreElement = document.createElement('div');
+                scoreElement.className = 'stat-item';
+                scoreElement.innerHTML = `
+                    <div class="stat-label">${dysfunction.name}</div>
+                    <div class="stat-value">${score}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${percentage}%; background: ${dysfunction.color};"></div>
+                    </div>
+                `;
+                scoresContainer.appendChild(scoreElement);
+            });
+            
+            // 更新最高和最低得分项
+            updateHighLowScores();
+            
+            // 更新平均分
+            const totalAverage = calculateTotalAverage();
+            document.getElementById('averageScore').textContent = totalAverage.toFixed(1);
+            document.getElementById('averageProgress').style.width = `${(totalAverage / 5) * 100}%`;
+            
+            // 更新图表
+            updateChart();
+        }
+
+        // 计算总体平均分
+        function calculateTotalAverage() {
+            if (questionStats.length === 0 || participants.length === 0) return 0;
+            
+            const totalScore = questionStats.reduce((sum, stat) => sum + parseFloat(stat.averageScore), 0);
+            return totalScore / questionStats.length;
+        }
+
+        // 更新最高和最低得分项
+        function updateHighLowScores() {
+            // 排序问题统计（按平均分）
+            const sortedQuestions = [...questionStats].sort((a, b) => b.averageScore - a.averageScore);
+            
+            // 获取最高5个
+            const highScoresContainer = document.getElementById('highScoresContainer');
+            highScoresContainer.innerHTML = '';
+            
+            if (sortedQuestions.length > 0) {
+                const highScores = sortedQuestions.slice(0, 5);
+                highScores.forEach((question, index) => {
+                    const questionElement = document.createElement('div');
+                    questionElement.className = 'high-item';
+                    questionElement.innerHTML = `
+                        <div>
+                            <div><strong>${getCategoryName(question.category)}</strong></div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">${question.text}</div>
+                        </div>
+                        <div class="item-score">${parseFloat(question.averageScore).toFixed(1)}</div>
+                    `;
+                    highScoresContainer.appendChild(questionElement);
+                });
+            } else {
+                highScoresContainer.innerHTML = '<div class="empty-state">暂无数据</div>';
+            }
+            
+            // 获取最低5个
+            const lowScoresContainer = document.getElementById('lowScoresContainer');
+            lowScoresContainer.innerHTML = '';
+            
+            if (sortedQuestions.length > 0) {
+                const lowScores = sortedQuestions.slice(-5).reverse();
+                lowScores.forEach((question, index) => {
+                    const questionElement = document.createElement('div');
+                    questionElement.className = 'low-item';
+                    questionElement.innerHTML = `
+                        <div>
+                            <div><strong>${getCategoryName(question.category)}</strong></div>
+                            <div style="font-size: 0.9rem; opacity: 0.9;">${question.text}</div>
+                        </div>
+                        <div class="item-score">${parseFloat(question.averageScore).toFixed(1)}</div>
+                    `;
+                    lowScoresContainer.appendChild(questionElement);
+                });
+            } else {
+                lowScoresContainer.innerHTML = '<div class="empty-state">暂无数据</div>';
+            }
+        }
+
+        // 获取分类名称
+        function getCategoryName(categoryId) {
+            const dysfunction = fiveDysfunctions.find(d => d.id === categoryId);
+            return dysfunction ? dysfunction.name : categoryId;
+        }
+
+        // 更新图表
+        function updateChart() {
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            
+            // 如果已有图表实例，先销毁
+            if (chart) {
+                chart.destroy();
+            }
+            
+            const labels = fiveDysfunctions.map(d => d.name);
+            const scores = fiveDysfunctions.map(d => parseFloat(teamScores[d.id]) || 0);
+            const colors = fiveDysfunctions.map(d => d.color);
+            
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '平均得分',
+                        data: scores,
+                        backgroundColor: colors,
+                        borderColor: colors.map(color => color.replace('0.8', '1')),
+                        borderWidth: 1,
+                        borderRadius: 5,
+                        maxBarThickness: 60
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                callback: function(value) {
+                                    return value.toFixed(1);
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `得分: ${context.parsed.y.toFixed(1)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 生成分析报告
+        function generateReport() {
+            if (participants.length === 0) {
+                document.getElementById('reportContent').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>暂无数据</h3>
+                        <p>请先提交测评数据以生成分析报告</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const totalAverage = calculateTotalAverage();
+            const sortedQuestions = [...questionStats].sort((a, b) => b.averageScore - a.averageScore);
+            const highScores = sortedQuestions.slice(0, 5);
+            const lowScores = sortedQuestions.slice(-5).reverse();
+            
+            // 评估每个障碍的表现
+            const dysfunctionAssessments = fiveDysfunctions.map(dysfunction => {
+                const score = parseFloat(teamScores[dysfunction.id]);
+                let assessment = '';
+                
+                if (score >= 4.0) {
+                    assessment = '表现优秀，是该团队的优势领域';
+                } else if (score >= 3.0) {
+                    assessment = '表现良好，但有提升空间';
+                } else if (score >= 2.0) {
+                    assessment = '表现一般，需要关注和改进';
+                } else {
+                    assessment = '表现较弱，是需要重点提升的领域';
+                }
+                
+                return { ...dysfunction, score, assessment };
+            });
+            
+            // 生成报告HTML
+            const reportHTML = `
+                <div class="report-section">
+                    <h4><i class="fas fa-users"></i> 报告概览</h4>
+                    <p>本报告基于 <strong>${participants.length} 名团队成员</strong> 的测评数据生成，评估了团队在协作五项障碍上的表现。总体平均分为 <strong>${totalAverage.toFixed(1)}</strong>（满分5分）。</p>
+                    <p>报告生成时间: ${new Date().toLocaleString('zh-CN')}</p>
+                </div>
+                
+                <div class="report-section">
+                    <h4><i class="fas fa-chart-line"></i> 各维度得分分析</h4>
+                    ${dysfunctionAssessments.map(item => `
+                        <div style="margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span><strong>${item.name}</strong>: ${item.description}</span>
+                                <span style="font-weight: bold; color: ${item.color}">${item.score} 分</span>
+                            </div>
+                            <div class="progress-bar" style="height: 8px; margin-bottom: 5px;">
+                                <div class="progress-fill" style="width: ${(item.score / 5) * 100}%; background: ${item.color};"></div>
+                            </div>
+                            <div style="font-size: 0.9rem;">${item.assessment}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="report-section">
+                    <h4><i class="fas fa-thumbs-up"></i> 优势项目 (最高5个得分项)</h4>
+                    <p>以下项目团队表现较好，是团队的优势所在：</p>
+                    ${highScores.map((item, index) => `
+                        <div style="margin-bottom: 10px; padding: 10px; background: rgba(76, 175, 80, 0.1); border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span><strong>${index + 1}. ${item.text}</strong></span>
+                                <span style="color: #4caf50; font-weight: bold;">${parseFloat(item.averageScore).toFixed(1)} 分</span>
+                            </div>
+                            <div style="font-size: 0.9rem; margin-top: 5px;">
+                                <span class="pill pill-high">${getCategoryName(item.category)}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="report-section">
+                    <h4><i class="fas fa-exclamation-triangle"></i> 待改进项目 (最低5个得分项)</h4>
+                    <p>以下项目团队得分较低，是需要重点关注的改进领域：</p>
+                    ${lowScores.map((item, index) => `
+                        <div style="margin-bottom: 10px; padding: 10px; background: rgba(244, 67, 54, 0.1); border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span><strong>${index + 1}. ${item.text}</strong></span>
+                                <span style="color: #f44336; font-weight: bold;">${parseFloat(item.averageScore).toFixed(1)} 分</span>
+                            </div>
+                            <div style="font-size: 0.9rem; margin-top: 5px;">
+                                <span class="pill pill-low">${getCategoryName(item.category)}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="report-section">
+                    <h4><i class="fas fa-lightbulb"></i> 改进建议</h4>
+                    <p>基于测评结果，我们为您提供以下改进建议：</p>
+                    <ul style="padding-left: 20px;">
+                        <li><strong>建立信任</strong>: ${teamScores.trust < 3 ? '通过团队建设活动、个人经历分享和定期的一对一交流，增强团队成员间的相互了解和信任。' : '团队信任基础良好，可进一步通过共同应对挑战来深化信任关系。'}</li>
+                        <li><strong>管理冲突</strong>: ${teamScores.conflict < 3 ? '建立建设性冲突的规范，鼓励团队成员在会议上表达不同意见，聚焦问题而非人身攻击。' : '团队冲突管理得当，继续保持开放讨论的氛围，确保所有观点都能被听到。'}</li>
+                        <li><strong>达成承诺</strong>: ${teamScores.commitment < 3 ? '确保会议有明确的决策和行动计划，使用"同意但保留意见"的方法，让所有人支持团队决定。' : '团队承诺度较高，可进一步通过明确责任和截止日期来强化执行力。'}</li>
+                        <li><strong>共担责任</strong>: ${teamScores.accountability < 3 ? '建立明确的绩效标准，定期进行进度回顾，鼓励团队成员互相提醒和督促。' : '团队责任感较强，可进一步通过公开承诺和定期检查来保持高标准。'}</li>
+                        <li><strong>关注结果</strong>: ${teamScores.results < 3 ? '明确团队优先目标，定期检查进展，将团队成果与个人激励相结合。' : '团队结果导向良好，继续保持对关键目标的聚焦，防止分散注意力。'}</li>
+                    </ul>
+                </div>
+                
+                <div class="report-section">
+                    <h4><i class="fas fa-calendar-check"></i> 行动计划建议</h4>
+                    <p>建议团队在接下来一个月内采取以下具体行动：</p>
+                    <ol style="padding-left: 20px;">
+                        <li>召开团队测评结果分享会，讨论本次测评发现</li>
+                        <li>针对得分最低的2-3个项目，制定具体的改进措施</li>
+                        <li>设立每月检查点，回顾团队协作改进进展</li>
+                        <li>考虑在3个月后重新测评，评估改进效果</li>
+                    </ol>
+                </div>
+            `;
+            
+            document.getElementById('reportContent').innerHTML = reportHTML;
+        }
+
+        // 下载报告
+        function downloadReport() {
+            if (participants.length === 0) {
+                alert('暂无数据可下载报告');
+                return;
+            }
+            
+            const reportContent = document.getElementById('reportContent');
+            if (!reportContent || reportContent.querySelector('.empty-state')) {
+                alert('请先生成报告再下载');
+                return;
+            }
+            
+            // 创建文本内容
+            let textContent = '团队协作五项障碍测评分析报告\n';
+            textContent += '='.repeat(50) + '\n\n';
+            textContent += `报告生成时间: ${new Date().toLocaleString('zh-CN')}\n`;
+            textContent += `参与测评人数: ${participants.length}\n\n`;
+            
+            // 添加各维度得分
+            textContent += '各维度得分:\n';
+            textContent += '-'.repeat(30) + '\n';
+            fiveDysfunctions.forEach(dysfunction => {
+                const score = parseFloat(teamScores[dysfunction.id]) || 0;
+                textContent += `${dysfunction.name}: ${score}分\n`;
+            });
+            
+            // 添加总体平均分
+            const totalAverage = calculateTotalAverage();
+            textContent += `\n总体平均分: ${totalAverage.toFixed(1)}分\n\n`;
+            
+            // 添加最高和最低得分项
+            const sortedQuestions = [...questionStats].sort((a, b) => b.averageScore - a.averageScore);
+            const highScores = sortedQuestions.slice(0, 5);
+            const lowScores = sortedQuestions.slice(-5).reverse();
+            
+            textContent += '优势项目 (最高5个得分项):\n';
+            textContent += '-'.repeat(40) + '\n';
+            highScores.forEach((item, index) => {
+                textContent += `${index + 1}. ${item.text} (${getCategoryName(item.category)}): ${parseFloat(item.averageScore).toFixed(1)}分\n`;
+            });
+            
+            textContent += '\n待改进项目 (最低5个得分项):\n';
+            textContent += '-'.repeat(40) + '\n';
+            lowScores.forEach((item, index) => {
+                textContent += `${index + 1}. ${item.text} (${getCategoryName(item.category)}): ${parseFloat(item.averageScore).toFixed(1)}分\n`;
+            });
+            
+            // 创建Blob并下载
+            const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `团队协作测评报告_${new Date().toISOString().slice(0, 10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 提交测评
+            document.getElementById('submitBtn').addEventListener('click', submitAssessment);
+            
+            // 生成报告
+            document.getElementById('generateReportBtn').addEventListener('click', generateReport);
+            
+            // 下载报告
+            document.getElementById('downloadReportBtn').addEventListener('click', downloadReport);
+            
+            // 清空数据
+            document.getElementById('clearDataBtn').addEventListener('click', function() {
+                if (confirm('确定要清空所有测评数据吗？此操作不可撤销。')) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    participants = [];
+                    calculateTeamStats();
+                    updateDashboard();
+                    generateReport();
+                    
+                    // 重置表单
+                    document.querySelectorAll('.rating-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    document.getElementById('participantName').value = '';
+                    
+                    alert('数据已清空');
+                }
+            });
+        }
+
+        // 提交测评
+        function submitAssessment() {
+            // 收集评分
+            const scores = [];
+            let allAnswered = true;
+            
+            for (let i = 0; i < assessmentQuestions.length; i++) {
+                const selectedOption = document.querySelector(`.rating-option.selected[data-question="${i}"]`);
+                if (selectedOption) {
+                    const score = parseInt(selectedOption.getAttribute('data-value'));
+                    scores.push(score);
+                } else {
+                    allAnswered = false;
+                    // 高亮未回答的问题
+                    const questionElement = document.querySelectorAll('.question-item')[i];
+                    questionElement.style.boxShadow = '0 0 0 2px rgba(255, 0, 0, 0.3)';
+                    setTimeout(() => {
+                        questionElement.style.boxShadow = '';
+                    }, 2000);
+                }
+            }
+            
+            if (!allAnswered) {
+                alert('请回答所有问题后再提交');
+                return;
+            }
+            
+            // 收集参与者姓名
+            const name = document.getElementById('participantName').value.trim() || '匿名参与者';
+            
+            // 创建参与者记录
+            const participant = {
+                id: Date.now(),
+                name: name,
+                timestamp: new Date().toISOString(),
+                scores: scores
+            };
+            
+            // 添加到参与者列表
+            participants.push(participant);
+            
+            // 保存数据
+            saveData();
+            
+            // 重新计算统计信息
+            calculateTeamStats();
+            
+            // 更新仪表板
+            updateDashboard();
+            
+            // 重置表单
+            document.querySelectorAll('.rating-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            document.getElementById('participantName').value = '';
+            
+            // 显示成功消息
+            alert(`感谢 ${name} 提交测评！您的数据已保存。`);
+        }
+    </script>
+</body>
+</html>
